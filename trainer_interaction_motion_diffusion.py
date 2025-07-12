@@ -34,7 +34,6 @@ from manip.utils.trainer_utils import (
     canonicalize_first_human_and_waypoints,
     cycle,
     find_contact_frames,
-    load_hand_face_ids,
     load_palm_vertex_ids,
     run_smplx_model,
     smooth_res,
@@ -185,7 +184,6 @@ class Trainer(object):
             self.left_hand_vertex_idxs,
             self.right_hand_vertex_idxs,
         ) = self.load_hand_vertex_ids()
-        self.left_hand_faces, self.right_hand_faces = load_hand_face_ids()
         self.left_palm_vertex_idxs, self.right_palm_vertex_idxs = load_palm_vertex_ids()
 
     def load_hand_vertex_ids(self):

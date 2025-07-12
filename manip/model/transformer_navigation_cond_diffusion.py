@@ -1132,7 +1132,7 @@ class NavigationCondGaussianDiffusion(nn.Module):
                         open(
                             os.path.join(
                                 os.path.dirname(os.path.abspath(__file__)),
-                                "../../data/local_joint_rot_mat.pkl",
+                                "../../local_joint_rot_mat.pkl",
                             ),
                             "rb",
                         )

@@ -1,28 +1,11 @@
 .vscode
 __pycache__
-metrics/
-demo/human_study_videos/
-demo/human_study_videos.zip
-texts.txt
-obj_names.txt
-rendered_image.png
-opt.yaml
-left_wrist_contact.pkl
-a.ipynb
-combined_mesh.obj
 
-demo/blender_files/
-demo/rendered_images/
-demo/videos/
-demo/compare_grip/
-demo/compare_phys/
-
-llm/output/
-
-data/
+data/*
 results/
 experiments/
 
 visualizer_results/
 
 removed/
+

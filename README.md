@@ -9,6 +9,35 @@ This is the official implementation for the ICCV 2025 [paper](https://arxiv.org/
 > Note: This code was developed on Ubuntu 20.04 with Python 3.8, CUDA 12.4, and PyTorch 1.11.0.
 
 Clone the repo.
+```
+git clone https://github.com/zhenkirito123/hoifhli_release.git
+cd hoifhli_release/
+```
+Create a virtual environment using Conda and activate the environment. 
+```
+conda env create -f environment.yml
+conda activate hoifhli_env 
+```
+
+
+### Prerequisites 
+Please download [SMPL-X](https://smpl-x.is.tue.mpg.de/index.html) and put the model to ```data/smpl_all_models/```. The file structure should look like this:
+
+```
+data/
+├── smpl_all_models/
+│   ├── smplx/
+│   │   ├── SMPLX_FEMALE.npz
+│   │   ├── SMPLX_MALE.npz
+│   │   ├── SMPLX_NEUTRAL.npz
+│   │   ├── SMPLX_FEMALE.pkl
+│   │   ├── SMPLX_MALE.pkl
+│   │   ├── SMPLX_NEUTRAL.pkl
+
+```
+
+### Sampling long sequence for OMOMO objects
+
 
 
 ### Citation

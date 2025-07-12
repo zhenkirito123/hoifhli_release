@@ -1117,23 +1117,6 @@ def load_palm_vertex_ids():
     return left_hand_vids, right_hand_vids
 
 
-def load_hand_face_ids():
-    data = pickle.load(
-        open(
-            os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "../../data/smpl_all_models/MANO_SMPLX_face_ids.pkl",
-            ),
-            "rb",
-        )
-    )
-
-    left_hand_fids = data["left_hand"]
-    right_hand_fids = data["right_hand"]
-
-    return left_hand_fids, right_hand_fids
-
-
 def decide_no_force_closure_from_objects(object_name):
     if object_name in [
         "largebox",

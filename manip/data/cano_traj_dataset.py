@@ -115,24 +115,20 @@ def rotate(points, R):
 
 
 def get_smpl_parents(use_joints24=True):
-    smplh_path = os.path.join(
+    # Define paths for saved parent data
+    data_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-        "data/smpl_all_models/smplh_amass",
+        "data",
+        "smpl_all_models/",
     )
-    bm_path = os.path.join(smplh_path, "male/model.npz")
-    npz_data = np.load(bm_path)
-    ori_kintree_table = npz_data["kintree_table"]  # 2 X 52
+    parents_22_path = os.path.join(data_dir, "smpl_parents_22.npy")
+    parents_24_path = os.path.join(data_dir, "smpl_parents_24.npy")
 
+    # Load the appropriate parents based on use_joints24 parameter
     if use_joints24:
-        parents = ori_kintree_table[0, :23]  # 23
-        parents[0] = -1  # Assign -1 for the root joint's parent idx.
-
-        parents_list = parents.tolist()
-        parents_list.append(ori_kintree_table[0][37])
-        parents = np.asarray(parents_list)  # 24
+        parents = np.load(parents_24_path)
     else:
-        parents = ori_kintree_table[0, :22]  # 22
-        parents[0] = -1  # Assign -1 for the root joint's parent idx.
+        parents = np.load(parents_22_path)
 
     return parents
 
