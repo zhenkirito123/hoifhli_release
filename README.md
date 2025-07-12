@@ -33,12 +33,20 @@ data/
 │   │   ├── SMPLX_FEMALE.pkl
 │   │   ├── SMPLX_MALE.pkl
 │   │   ├── SMPLX_NEUTRAL.pkl
-
 ```
 
-### Sampling long sequence for OMOMO objects
+Then run the following script to download the data.
+```
+bash scripts/download_data.sh
+```
 
 
+### Sampling Long Sequences
+Run the following script to sample long sequences.
+```
+bash scripts/sample.sh
+```
+By default, it will generate interaction motion with a box. You can change the object by modifying the ```--test_object_name``` argument.
 
 ### Citation
 ```

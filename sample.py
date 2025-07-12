@@ -1816,7 +1816,6 @@ def generate_interaction_motion(
         left_wrist_init_pose=left_wrist_pose,
         right_wrist_init_pose=right_wrist_pose,
         no_force_closure=no_force_closure,
-        # grasp_iter=1,  # FIXME:
     )
 
     # Stage 3: Run RefineNet.
@@ -2452,6 +2451,7 @@ def run_sample(
         coarse_milestone=coarse_milestone,
         fine_milestone=fine_milestone,
         navi_milestone=navi_milestone,
+        object_list=opt.test_object_names,
     )
 
     torch.cuda.empty_cache()

@@ -195,24 +195,25 @@ class HumanML3DDataset(Dataset):
         keep_same_len_window = False
         self.keep_same_len_window = keep_same_len_window
 
-        train_json_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "../../data/HumanML3D/humanml3d_train_seq_names.json",
-        )
-        test_json_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "../../data/HumanML3D/humanml3d_test_seq_names.json",
-        )
+        if self.load_ds:
+            train_json_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "../../data/HumanML3D/humanml3d_train_seq_names.json",
+            )
+            test_json_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "../../data/HumanML3D/humanml3d_test_seq_names.json",
+            )
 
-        if self.train:
-            seq_names = json.load(open(train_json_path, "r"))["k_idx"]
-        else:
-            seq_names = json.load(open(test_json_path, "r"))["k_idx"]
+            if self.train:
+                seq_names = json.load(open(train_json_path, "r"))["k_idx"]
+            else:
+                seq_names = json.load(open(test_json_path, "r"))["k_idx"]
 
-        amass_npz_folder = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "../../data/amass_smplx_humanml3d_processed",
-        )
+            amass_npz_folder = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "../../data/amass_smplx_humanml3d_processed",
+            )
 
         if keep_same_len_window:
             if self.train:

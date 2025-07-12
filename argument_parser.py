@@ -130,10 +130,11 @@ def parse_opt():
     parser.add_argument("--return_diff_level_res", action="store_true")
 
     parser.add_argument(
-        "--test_object_name",
+        "--test_object_names",
         type=str,
-        default="",
-        help="object name for long sequence generation testing",
+        nargs="+",
+        default=["largebox"],
+        help="object names for long sequence generation testing",
     )
 
     parser.add_argument("--use_long_planned_path", action="store_true")

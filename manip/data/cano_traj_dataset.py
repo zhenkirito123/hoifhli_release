@@ -551,8 +551,6 @@ class CanoObjectTrajDataset(Dataset):
         )
         support_base_dir = soma_work_base_dir
         surface_model_type = "smplx"
-        # surface_model_male_fname = os.path.join(support_base_dir, surface_model_type, "male", 'model.npz')
-        # surface_model_female_fname = os.path.join(support_base_dir, surface_model_type, "female", 'model.npz')
         surface_model_male_fname = os.path.join(
             support_base_dir, surface_model_type, "SMPLX_MALE.npz"
         )
@@ -593,50 +591,6 @@ class CanoObjectTrajDataset(Dataset):
         assert len(self.window_data_dict) == len(self.standing_flag_dict)
         assert len(self.window_data_dict) == len(self.object_static_flag_dict)
         assert len(self.window_data_dict) == len(self.root_traj_xy_ori_dict)
-
-        # self.generate_init_grasp_pose(self.train)
-
-    def generate_init_grasp_pose(self, is_train):
-        from sklearn.cluster import KMeans
-        from tqdm import tqdm
-
-        init_grasp_pose = {
-            "left_hand": defaultdict(list),
-            "right_hand": defaultdict(list),
-        }
-        for index, _ in tqdm(self.window_data_dict.items()):
-            seq_name = self.window_data_dict[index]["seq_name"]
-            object_name = seq_name.split("_")[1]
-            window_s_idx = self.window_data_dict[index]["start_t_idx"]
-            window_e_idx = self.window_data_dict[index]["end_t_idx"]
-            contact_npy_path = os.path.join(self.contact_npy_folder, seq_name + ".npy")
-            contact_npy_data = np.load(
-                contact_npy_path
-            )  # T X 4 (lhand, rhand, lfoot, rfoot)
-            contact_labels = contact_npy_data[window_s_idx : window_e_idx + 1]  # W
-            contact_labels = torch.from_numpy(contact_labels).float()
-
-            wrist_relative = self.wrist_relative_dict[index].float()  # 18
-            # set the wrist relative to zero if the not in contact.
-            # wrist_relative[:, 0:9] *= contact_labels[:, 0:1] # left hand
-            # wrist_relative[:, 9:18] *= contact_labels[:, 1:2] # right hand
-            init_grasp_pose["left_hand"][object_name].append(
-                wrist_relative[(contact_labels[:, 0:1] > 0.9).reshape(-1), 0:9]
-            )
-            init_grasp_pose["right_hand"][object_name].append(
-                wrist_relative[(contact_labels[:, 1:2] > 0.9).reshape(-1), 9:18]
-            )
-
-        path = "init_grasp_pose_{}.pkl".format("train" if is_train else "test")
-
-        pickle.dump(init_grasp_pose, open(path, "wb"))
-        print("Init grasp pose saved to {}".format(path))
-        # for hand in init_grasp_pose:
-        #     for obj_name in init_grasp_pose[hand]:
-        #         data = torch.cat(init_grasp_pose[hand][obj_name]) # T X 9
-        #         pos = data[:, :3]
-        #         rot_6d = data[:, 3:]
-        #         # k-means
 
     def find_static_move_switch(self, object_static_flag):
         # object_static_flag: BS X T / T
