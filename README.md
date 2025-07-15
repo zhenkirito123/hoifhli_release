@@ -18,6 +18,20 @@ Create a virtual environment using Conda and activate the environment.
 conda env create -f environment.yml
 conda activate hoifhli_env 
 ```
+Install TorchSDF based on the instruction from [here](https://github.com/PKU-EPIC/DexGraspNet/blob/bd1b13d7248729af117e1d46aaa6266b147a3c7b/grasp_generation/README.md?plain=1#L30).
+Install human_body_prior.
+```
+git clone https://github.com/nghorbani/human_body_prior.git
+pip install tqdm dotmap PyYAML omegaconf loguru
+cd human_body_prior/
+python setup.py develop
+```
+Install BPS.
+```
+pip install git+https://github.com/otaheri/chamfer_distance
+pip install git+https://github.com/otaheri/bps_torch
+```
+
 
 
 ### Prerequisites 
