@@ -31,6 +31,11 @@ Install BPS.
 pip install git+https://github.com/otaheri/chamfer_distance
 pip install git+https://github.com/otaheri/bps_torch
 ```
+Install smplx.
+```
+pip install smplx
+```
+
 
 
 
