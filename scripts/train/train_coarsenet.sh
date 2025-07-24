@@ -1,0 +1,11 @@
+python trainer_interaction_motion_diffusion.py \
+--window=120 \
+--batch_size=32 \
+--data_root_folder="./data/processed_data" \
+--project="./experiments" \
+--exp_name="train_cnet_release_test" \
+--wandb_pj_name="final_interaction_diffusion" \
+--add_object_in_wrist_loss \
+--loss_w_feet=1 \
+--loss_w_fk=0.5 \
+--loss_w_obj_pts=1

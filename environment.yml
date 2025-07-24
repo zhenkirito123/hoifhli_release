@@ -131,7 +131,7 @@ dependencies:
       # - chumpy==0.67.5
       - click==8.1.7
       - git+https://github.com/openai/CLIP.git
-      - git+https://github.com/vchoutas/torch-sdf.git
+      # - git+https://github.com/vchoutas/torch-sdf.git
       - cmake==3.24.0
       - coacd==1.0.0
       - colorlog==6.8.2

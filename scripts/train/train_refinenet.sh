@@ -1,0 +1,13 @@
+python trainer_interaction_motion_diffusion.py \
+--window=120 \
+--batch_size=32 \
+--data_root_folder="./data/processed_data" \
+--project="./experiments" \
+--exp_name="train_rnet_release_test" \
+--wandb_pj_name="final_interaction_diffusion" \
+--add_object_in_wrist_loss \
+--loss_w_feet=2 \
+--loss_w_fk=0.5 \
+--loss_w_obj_pts=1 \
+--add_wrist_relative --add_object_static \
+--add_interaction_root_xy_ori --add_interaction_feet_contact

@@ -19,6 +19,7 @@ conda env create -f environment.yml
 conda activate hoifhli_env 
 ```
 Install TorchSDF based on the instruction from [here](https://github.com/PKU-EPIC/DexGraspNet/blob/bd1b13d7248729af117e1d46aaa6266b147a3c7b/grasp_generation/README.md?plain=1#L30).
+
 Install human_body_prior.
 ```
 git clone https://github.com/nghorbani/human_body_prior.git
@@ -33,7 +34,7 @@ pip install git+https://github.com/otaheri/bps_torch
 ```
 Install smplx.
 ```
-pip install smplx
+pip install "smplx[all]"
 ```
 
 
@@ -66,6 +67,22 @@ Run the following script to sample long sequences.
 bash scripts/sample.sh
 ```
 By default, it will generate interaction motion with a box. You can change the object by modifying the ```--test_object_name``` argument.
+
+### Training
+You need to download the training data first. Run the following script to download the data. (**Note**: This script will delete `/data/processed_data` folder before re-downloading the training data. If you have any custom data stored there, make sure to back it up beforehand.)
+```
+bash scripts/download_training_data.sh
+```
+
+#### Training CoarseNet
+```
+bash scripts/train/train_coarsenet.sh
+```
+
+#### Training RefineNet
+```
+bash scripts/train/train_refinenet.sh
+```
 
 ### Citation
 ```

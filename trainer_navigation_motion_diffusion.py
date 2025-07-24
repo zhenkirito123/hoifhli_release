@@ -110,12 +110,12 @@ class Trainer(object):
         self.test_on_train = self.opt.test_on_train
 
         self.add_waypoints_xy = True
-        self.add_root_xy_ori = self.opt.add_root_xy_ori
+        self.add_root_xy_ori = True
         self.use_noisy_traj = self.opt.use_noisy_traj
 
         self.input_first_human_pose_for_nav = True
 
-        self.add_feet_contact = self.opt.add_feet_contact
+        self.add_feet_contact = True
 
         self.loss_w_feet = self.opt.loss_w_feet
         self.loss_w_fk = self.opt.loss_w_fk
@@ -1381,11 +1381,11 @@ def calculate_navi_representation_dim(opt):
     repr_dim = 24 * 3 + 22 * 6
 
     # Feet floor contact label
-    if opt.add_feet_contact:
+    if True: # opt.add_feet_contact:
         repr_dim += 4
 
     # Human root orientation in XY plane
-    if opt.add_root_xy_ori:
+    if True: # opt.add_root_xy_ori:
         repr_dim += 6
 
     return repr_dim
@@ -1422,7 +1422,7 @@ def run_train(opt, device):
         objective="pred_x0",
         loss_type=loss_type,
         input_first_human_pose=True,
-        add_feet_contact=opt.add_feet_contact,
+        add_feet_contact=True,
     )
     diffusion_model.to(device)
 
@@ -1472,7 +1472,7 @@ def run_sample(opt, device):
         objective="pred_x0",
         loss_type=loss_type,
         input_first_human_pose=True,
-        add_feet_contact=opt.add_feet_contact,
+        add_feet_contact=True,
     )
     diffusion_model.to(device)
 

@@ -301,12 +301,10 @@ def build_fine_interaction_trainer(
     repr_dim = (3 + 9) + (24 * 3 + 22 * 6) + (4) + (2 * (3 + 6))
 
     # Human root orientation in xy plane
-    if opt.add_interaction_root_xy_ori:
-        repr_dim += 6
+    repr_dim += 6
 
     # Feet floor contact
-    if opt.add_interaction_feet_contact:
-        repr_dim += 4
+    repr_dim += 4
 
     vis_wdir = None
     interaction_wdir = os.path.join(opt.project, opt.rnet_save_dir, "weights")
@@ -353,7 +351,7 @@ def build_navi_trainer(opt, device, milestone) -> NavigationTrainer:
         objective="pred_x0",
         loss_type=loss_type,
         input_first_human_pose=True,
-        add_feet_contact=opt.add_feet_contact,
+        add_feet_contact=True,
     )
     diffusion_model.to(device)
 
@@ -1726,8 +1724,6 @@ def generate_interaction_motion(
     rest_left_hand_local_rot_6d: torch.Tensor,
     rest_right_hand_local_rot_6d: torch.Tensor,
     add_finger_motion: bool = True,
-    add_interaction_root_xy_ori: bool = True,
-    add_interaction_feet_contact: bool = True,
     fix_feet_floor_penetration: bool = True,
     fix_feet_sliding: bool = False,
     smooth_whole_traj: bool = False,
@@ -1878,8 +1874,8 @@ def generate_interaction_motion(
         table_height=table_height,
         obj_end_rot_mat=obj_end_rot_mat,
         available_conditions_wrist_relative=available_conditions_wrist_relative,
-        add_root_ori=add_interaction_root_xy_ori,
-        add_feet_contact=add_interaction_feet_contact,
+        add_root_ori=True,
+        add_feet_contact=True,
     )
     fine_all_res_list = all_res_list.clone()
 
@@ -2120,55 +2116,6 @@ def cond_sample_res_w_long_planned_path_for_multi_objects(
 
         all_object_data_dict[key] = new_dict
 
-    # FIXME: fix this new object list
-    if False:
-        new_object_list = [
-            "bottle",
-            "floorlamp1",
-            "right_shoes1",
-            "toy2",
-            "laundrybasket",
-            "vase1",
-            "vase1_big",
-            "vase1_big2",
-            "toy1",
-            "laundrybasket",
-            "newobject",
-            "box_a",
-            "box_b",
-            "box_c",
-        ]
-        for object_name in new_object_list:
-            new_dict = {}
-            obj_rot_mat = torch.eye(3).reshape(1, 1, 3, 3)
-            obj_com_pos = torch.zeros(1, 1, 3)
-            new_dict["reference_obj_rot_mat"] = obj_rot_mat
-            new_dict["obj_name"] = [object_name]
-            mesh_dir = "/move/u/zhenwu/grasp_repo/DexGraspNet/data/raw_omomo_new/bps"
-            if os.path.exists(os.path.join(mesh_dir, object_name + ".pkl")):
-                bps_data = pickle.load(
-                    open(os.path.join(mesh_dir, object_name + ".pkl"), "rb")
-                )  # 1 X 1 X 1024 X 3
-                new_dict["input_obj_bps"] = bps_data
-            else:
-                curr_obj_bps, _ = self.get_object_geometry_bps(
-                    interaction_trainer.ds, [object_name], obj_rot_mat, obj_com_pos
-                )
-                new_dict["input_obj_bps"] = curr_obj_bps.cpu()
-                pickle.dump(
-                    new_dict["input_obj_bps"],
-                    open(os.path.join(mesh_dir, object_name + ".pkl"), "wb"),
-                )
-
-            new_dict["trans2joint"] = ref_data_dict[
-                "trans2joint"
-            ]  # use ref_dict's human skeleton. these should only be used in interaction guidance for now.
-            new_dict["betas"] = ref_data_dict["betas"]
-            new_dict["gender"] = ref_data_dict["gender"]
-
-            all_object_data_dict[object_name] = new_dict
-    #################################################### load data ####################################################
-
     #################################################### generate long path ####################################################
     (
         obj_initial_rot_mat_list,
@@ -2286,8 +2233,6 @@ def cond_sample_res_w_long_planned_path_for_multi_objects(
                     rest_left_hand_local_rot_6d=rest_left_hand_local_rot_6d,
                     rest_right_hand_local_rot_6d=rest_right_hand_local_rot_6d,
                     add_finger_motion=opt.add_finger_motion,
-                    add_interaction_root_xy_ori=opt.add_interaction_root_xy_ori,
-                    add_interaction_feet_contact=opt.add_interaction_feet_contact,
                     fix_feet_floor_penetration=fix_feet_floor_penetration,
                     fix_feet_sliding=fix_feet_sliding,
                     smooth_whole_traj=smooth_whole_traj,

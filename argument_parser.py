@@ -116,11 +116,7 @@ def parse_opt():
     # Add rest offsets for body shape information.
     parser.add_argument("--use_first_frame_bps", action="store_true")
 
-    parser.add_argument("--use_object_keypoints", type=bool, default=True)
-
     parser.add_argument("--input_full_human_pose", action="store_true")
-
-    parser.add_argument("--add_semantic_contact_labels", type=bool, default=True)
 
     parser.add_argument("--use_two_stage_pipeline", action="store_true")
 
@@ -144,9 +140,6 @@ def parse_opt():
     # For testing sampled results w planned path
     parser.add_argument("--use_planned_path", action="store_true")
 
-    # For testing sampled results w planned path
-    parser.add_argument("--add_feet_contact", type=bool, default=True)
-
     parser.add_argument(
         "--loss_w_feet",
         type=float,
@@ -162,11 +155,9 @@ def parse_opt():
         "--loss_w_obj_pts", type=float, default=1, help="the loss weight for fk loss"
     )
 
-    parser.add_argument("--add_root_xy_ori", type=bool, default=True)
-
     # For interaction model setting.
-    parser.add_argument("--add_interaction_root_xy_ori", type=bool, default=True)
-    parser.add_argument("--add_interaction_feet_contact", type=bool, default=True)
+    parser.add_argument("--add_interaction_root_xy_ori", action="store_true",)
+    parser.add_argument("--add_interaction_feet_contact", action="store_true",)
     parser.add_argument("--add_wrist_relative", action="store_true")
     parser.add_argument("--add_object_static", action="store_true")
 
@@ -293,8 +284,6 @@ def parse_opt():
 
     parser.add_argument("--finger_use_object_split", action="store_true")
 
-    parser.add_argument("--finger_use_joints24", type=bool, default=True)
-
     parser.add_argument("--finger_add_palm_jpos_only", action="store_true")
 
     parser.add_argument("--finger_use_blender_data", action="store_true")
@@ -302,19 +291,24 @@ def parse_opt():
     parser.add_argument("--finger_use_wandb", action="store_true")
 
     parser.add_argument("--finger_use_arctic", action="store_true")
-    parser.add_argument("--finger_use_omomo", type=bool, default=True)
     parser.add_argument("--finger_omomo_obj", type=str, default="")
 
     parser.add_argument("--finger_train_ambient_sensor", action="store_true")
     parser.add_argument("--finger_train_proximity_sensor", action="store_true")
-    parser.add_argument("--finger_train_both_sensor", type=bool, default=True)
     # parser.add_argument("--finger_train_contact_label", action="store_true")
 
     parser.add_argument("--finger_wrist_obj_traj_condition", action="store_true")
     parser.add_argument("--finger_ambient_sensor_condition", action="store_true")
-    parser.add_argument("--finger_proximity_sensor_condition", type=bool, default=True)
-    parser.add_argument("--finger_ref_pose_condition", type=bool, default=True)
     parser.add_argument("--finger_contact_label_condition", action="store_true")
+    
+    # Set a few args to True by default.
+    parser.set_defaults(
+        finger_use_joints24=True,
+        finger_use_omomo=True,
+        finger_train_both_sensor=True,
+        finger_proximity_sensor_condition=True,
+        finger_ref_pose_condition=True,
+    )
 
     opt = parser.parse_args()
     return opt

@@ -123,9 +123,9 @@ class Trainer(object):
 
         self.use_random_frame_bps = True
 
-        self.use_object_keypoints = self.opt.use_object_keypoints
+        self.use_object_keypoints = True
 
-        self.add_semantic_contact_labels = self.opt.add_semantic_contact_labels
+        self.add_semantic_contact_labels = True
 
         self.use_object_split = self.opt.use_object_split
         self.data_root_folder = self.opt.data_root_folder
@@ -3657,7 +3657,7 @@ def build_interaction_trainer(
         input_contact_labels=opt.add_contact_label,
         input_first_human_pose=True,
         input_rest_human_skeleton=opt.add_rest_human_skeleton,
-        use_object_keypoints=opt.use_object_keypoints,
+        use_object_keypoints=True,
         use_feet_contact=use_feet_contact,
     )
     interaction_model.to(device)
@@ -3927,10 +3927,10 @@ def run_train(opt, device):
     # Define model
     repr_dim = 3 + 9  # Object relative translation and relative rotation matrix
 
-    if opt.pred_human_motion:
+    if True:  # opt.pred_human_motion:
         repr_dim += 24 * 3 + 22 * 6
 
-    if opt.use_object_keypoints:
+    if True: # opt.use_object_keypoints:
         repr_dim += 4
 
     if opt.add_interaction_feet_contact:
@@ -3963,7 +3963,7 @@ def run_train(opt, device):
         input_contact_labels=opt.add_contact_label,
         input_first_human_pose=True,
         input_rest_human_skeleton=opt.add_rest_human_skeleton,
-        use_object_keypoints=opt.use_object_keypoints,
+        use_object_keypoints=True,
         use_feet_contact=opt.add_interaction_feet_contact,
         add_object_in_wrist_loss=opt.add_object_in_wrist_loss,
         add_object_vel_loss=opt.add_object_vel_loss,
@@ -3996,10 +3996,10 @@ def run_sample(opt, device):
     # Define model
     repr_dim = 3 + 9
 
-    if opt.pred_human_motion:
+    if True:  # opt.pred_human_motion:
         repr_dim += 24 * 3 + 22 * 6
 
-    if opt.use_object_keypoints:
+    if True: # opt.use_object_keypoints:
         repr_dim += 4
 
     if opt.add_interaction_feet_contact:
@@ -4032,7 +4032,7 @@ def run_sample(opt, device):
         input_contact_labels=opt.add_contact_label,
         input_first_human_pose=True,
         input_rest_human_skeleton=opt.add_rest_human_skeleton,
-        use_object_keypoints=opt.use_object_keypoints,
+        use_object_keypoints=True,
         use_feet_contact=opt.add_interaction_feet_contact,
     )
 
@@ -4149,8 +4149,6 @@ def parse_opt():
 
     parser.add_argument("--input_full_human_pose", action="store_true")
 
-    parser.add_argument("--use_object_keypoints", action="store_true")
-
     parser.add_argument(
         "--loss_w_feet",
         type=float,
@@ -4183,8 +4181,6 @@ def parse_opt():
         help="the loss weight for object velocity",
     )
 
-    parser.add_argument("--add_semantic_contact_labels", action="store_true")
-
     # Add extra loss.
     parser.add_argument(
         "--add_object_in_wrist_loss",
@@ -4211,15 +4207,13 @@ def parse_opt():
 
     parser.add_argument(
         "--add_interaction_root_xy_ori",
-        type=bool,
-        default=True,
+        action="store_true",
         help="Add root xy orientation as condition.",
     )
 
     parser.add_argument(
         "--add_interaction_feet_contact",
-        type=bool,
-        default=True,
+        action="store_true",
         help="Add feet contact as condition.",
     )
 
