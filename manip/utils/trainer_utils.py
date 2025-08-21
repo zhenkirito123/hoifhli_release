@@ -11,7 +11,10 @@ import trimesh
 from pysdf import SDF
 from scipy.ndimage import gaussian_filter1d
 from scipy.signal import medfilt
+from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Slerp
 from sklearn.cluster import DBSCAN
+import smplx
 
 from manip.data.cano_traj_dataset import CanoObjectTrajDataset
 from manip.data.humanml3d_dataset import quat_fk_torch
@@ -1536,3 +1539,269 @@ def fix_feet(
                         target_human_jnts[index:ptr, smplx_idx] = new_pos
 
     return target_human_jnts
+
+phys2smplx_idx = [0, 1, 5, 9, 2, 6, 10, 3, 7, 11, 4, 8, 12, 14, 33, 13, 15, 34, 16, 35, 17, 36, \
+        18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, \
+        37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
+
+phys_to_smplx_map = {i: phys2smplx_idx[i] for i in range(len(phys2smplx_idx))}
+smplx_to_phys_map = {v: k for k, v in phys_to_smplx_map.items()}
+
+smplx2phys_idx = [smplx_to_phys_map[i] for i in range(52)]
+
+phys_keys = ['Pelvis', 'L_Hip', 'L_Knee', 'L_Ankle', 'L_Toe', 'R_Hip', 'R_Knee', 'R_Ankle', 'R_Toe', 'Torso',
+                'Spine', 'Chest', 'Neck', 'Head', 'L_Thorax', 'L_Shoulder', 'L_Elbow', 'L_Wrist', 'L_Index1',
+                'L_Index2', 'L_Index3', 'L_Middle1', 'L_Middle2', 'L_Middle3', 'L_Pinky1', 'L_Pinky2', 'L_Pinky3',
+                'L_Ring1', 'L_Ring2', 'L_Ring3', 'L_Thumb1', 'L_Thumb2', 'L_Thumb3', 'R_Thorax', 'R_Shoulder',
+                'R_Elbow', 'R_Wrist', 'R_Index1', 'R_Index2', 'R_Index3', 'R_Middle1', 'R_Middle2', 'R_Middle3',
+                'R_Pinky1', 'R_Pinky2', 'R_Pinky3', 'R_Ring1', 'R_Ring2', 'R_Ring3', 'R_Thumb1', 'R_Thumb2', 'R_Thumb3']
+
+def process_same_object_name(object_endtime_pairs):
+    object_name_count = {}
+    for i, (object_name, end_time) in enumerate(object_endtime_pairs):
+        if object_name not in object_name_count:
+            object_name_count[object_name] = 0
+        else:
+            object_name_count[object_name] += 1
+            object_name = f"{object_name}_{str(object_name_count[object_name])}"
+        object_endtime_pairs[i] = (object_name, end_time)
+    return object_endtime_pairs
+
+
+def convert_smplx_to_phys_(smplx_data):
+    phys_data = smplx_data[:, smplx2phys_idx, :]
+    return phys_data
+
+
+def convert_smplx_to_phys(seq_data):
+    object_endtime_pairs = seq_data['object_endtime_pairs'] # [(object_name, end_time), ...]
+    num_objects = len(object_endtime_pairs)
+    
+    object_endtime_pairs = process_same_object_name(object_endtime_pairs)
+    
+    contact_info = seq_data['contact_info']
+    
+    for k in seq_data:
+        if isinstance(seq_data[k], torch.Tensor):
+            seq_data[k] = seq_data[k].cpu()
+
+    gender = 'male' #seq_data['gender']
+    T = seq_data['human_jnts_local_rot_aa'].shape[0]
+
+    # ======= START INTERPOLATION =======
+
+    FRAMES = np.arange(0, T - 1, 1)
+
+    human_jnts_local_rot_aa_interp = []
+    for i in range(seq_data['human_jnts_local_rot_aa'].shape[1]):
+        human_jnts_local_rot_aa = R.from_rotvec(seq_data['human_jnts_local_rot_aa'][:, i])
+        human_jnts_local_rot_aa_slerp = Slerp(range(T), human_jnts_local_rot_aa)
+        human_jnts_local_rot_aa_interp.append(human_jnts_local_rot_aa_slerp(FRAMES).as_rotvec())
+    human_jnts_local_rot_aa_interp = np.stack(human_jnts_local_rot_aa_interp, axis=1)
+    human_jnts_local_rot_aa_interp = torch.tensor(human_jnts_local_rot_aa_interp).float()
+
+    finger_jnts_local_rot_aa_interp = []
+    for i in range(seq_data['finger_jnts_local_rot_aa'].shape[1]):
+        finger_jnts_local_rot_aa = R.from_rotvec(seq_data['finger_jnts_local_rot_aa'][:, i])
+        finger_jnts_local_rot_aa_slerp = Slerp(range(T), finger_jnts_local_rot_aa)
+        finger_jnts_local_rot_aa_interp.append(finger_jnts_local_rot_aa_slerp(FRAMES).as_rotvec())
+    finger_jnts_local_rot_aa_interp = np.stack(finger_jnts_local_rot_aa_interp, axis=1)
+    finger_jnts_local_rot_aa_interp = torch.tensor(finger_jnts_local_rot_aa_interp).float()
+
+    human_root_pos_interp = np.array(
+        [np.interp(FRAMES, range(T), seq_data['human_root_pos'][:, dim]) for dim in range(3)]).T
+    human_root_pos_interp = torch.tensor(human_root_pos_interp).float()
+    
+    obj_rot_mat_interp_list = []
+    obj_pos_interp_list = []
+    for i in range(num_objects):
+        obj_rot_mat_interp = Slerp(range(T), R.from_matrix(seq_data['obj_rot_mat'][i]))(FRAMES).as_matrix()
+        obj_pos_interp = np.array([np.interp(FRAMES, range(T), seq_data['obj_pos'][i][:, dim]) for dim in range(3)]).T
+        
+        obj_rot_mat_interp_list.append(obj_rot_mat_interp)
+        obj_pos_interp_list.append(obj_pos_interp)
+
+    T = len(FRAMES)
+
+    # ======= END OF INTERPOLATION =======
+
+    sbj_m = smplx.create(
+        model_path=os.path.join(
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            ),
+            "data",
+            "smpl_all_models",
+        ),
+        model_type='smplx',
+        gender=gender,
+        batch_size=T,
+        use_pca=False,
+        num_betas=16,
+        flat_hand_mean=True
+    )
+
+    # sbj_parms = params2torch(seq_data.body.params)
+    s_out = sbj_m(betas=torch.tensor([[ 0.8882,  0.0634,  0.7364, -2.1568, -1.0418, -0.5665,  4.1727,  1.4160,
+          2.1836,  2.5980, -2.3136, -0.6962,  1.7863,  0.0176,  0.7098,  1.5602]]), #seq_data['betas'],
+                  global_orient=human_jnts_local_rot_aa_interp[:, 0],
+                  body_pose=human_jnts_local_rot_aa_interp[:, 1:].reshape(T, 63),
+                  transl=human_root_pos_interp,
+                  left_hand_pose=finger_jnts_local_rot_aa_interp[:, :15].reshape(T, 45),
+                  right_hand_pose=finger_jnts_local_rot_aa_interp[:, 15:].reshape(T, 45)
+                  )
+
+    # get offset
+    root_joint_position = s_out.joints[:, 0].detach().cpu()
+    translation = human_root_pos_interp.view(T, 3).detach().cpu()
+
+    offset = root_joint_position - translation
+    offset = offset[0]  # only need the first frame
+
+    root_pos = human_root_pos_interp.view(T, 3).clone()
+    root_pos += offset
+    root_orient = human_jnts_local_rot_aa_interp[:, 0]
+
+    subject_motion = torch.cat([human_jnts_local_rot_aa_interp, finger_jnts_local_rot_aa_interp], dim=1)
+    # print('subject_motion.shape:', subject_motion.shape)
+    subject_motion = convert_smplx_to_phys_(subject_motion)
+    subject_motion = subject_motion[:, 1:, :]  # remove global orientation
+    subject_motion = subject_motion.reshape(T, -1)
+    # print('subject_motion.shape:', subject_motion.shape)
+
+    joint_pos = s_out.joints.detach().cpu()
+    joint_pos = np.concatenate([joint_pos[:, :22, :], joint_pos[:, 25:55, :]], axis=1)
+    joint_pos = convert_smplx_to_phys_(joint_pos)
+    joint_pos = joint_pos.reshape(T, -1)
+
+    # code to extract object information
+    disk_file_data = dict()
+    disk_file_data['fps'] = 30
+    disk_file_data['object_endtime_pairs'] = object_endtime_pairs
+    disk_file_data['frames'] = []
+
+    # convert root_orient from axis-angle to quaternion
+    root_orient = R.from_rotvec(root_orient).as_quat()
+
+    subject_motion = subject_motion.reshape(T, -1, 3)
+    for frame in range(T):
+        data_this_frame = dict()
+        data_this_frame[phys_keys[0]] = [root_pos[frame].tolist(), root_orient[frame].tolist()]
+        for joint_id in range(1, subject_motion.shape[1]):
+            # convert angle to quaternion
+            angle = R.from_rotvec(subject_motion[frame, joint_id - 1]).as_quat()
+            data_this_frame[phys_keys[joint_id]] = angle.tolist()
+        # print(data_this_frame)
+
+        for object_id in range(num_objects):
+            object_name = object_endtime_pairs[object_id][0]
+            obj_pos = obj_pos_interp_list[object_id]
+            obj_orient = R.from_matrix(obj_rot_mat_interp_list[object_id]).as_quat()
+            contact = contact_info[object_id][frame]
+            data_this_frame[object_name] = [obj_pos[frame].tolist(), obj_orient[frame].tolist()]
+            if bool(contact):
+                data_this_frame['contact'] = object_name
+        
+        disk_file_data['frames'].append(data_this_frame)
+    
+    return disk_file_data
+
+
+def save_motion_params(
+    params_save_paths,
+    p_idx,
+    contact_start_frames: List[int],
+    contact_end_frames: List[int],
+):
+    
+    object_endtime_pairs = []
+    
+    human_root_pos_list = []
+    human_jnts_pos_list = []
+    human_jnts_local_rot_aa_list = []
+    finger_jnts_local_rot_aa_list = []
+
+    frame_num_list = []
+    
+    for i in range(len(params_save_paths)):
+        with open(params_save_paths[i], "rb") as f:
+            data = pickle.load(f)
+        human_root_pos = data["human_root_pos"].detach().cpu().numpy() # T X 3
+        human_jnts_pos = data["human_jnts_pos"].detach().cpu().numpy() # T X 24 X 3
+        human_jnts_local_rot_aa = data["human_jnts_local_rot_aa"].detach().cpu().numpy() # T X 22 X 3
+        finger_jnts_local_rot_aa = data["finger_jnts_local_rot_aa"].detach().cpu().numpy() # T X 30 X 3
+        
+        human_root_pos_list.append(human_root_pos)
+        human_jnts_pos_list.append(human_jnts_pos)
+        human_jnts_local_rot_aa_list.append(human_jnts_local_rot_aa)
+        finger_jnts_local_rot_aa_list.append(finger_jnts_local_rot_aa)
+        frame_num_list.append(human_root_pos.shape[0])
+        
+    human_root_pos_all = np.concatenate(human_root_pos_list, axis=0)
+    human_jnts_pos_all = np.concatenate(human_jnts_pos_list, axis=0)
+    human_jnts_local_rot_aa_all = np.concatenate(human_jnts_local_rot_aa_list, axis=0)
+    finger_jnts_local_rot_aa_all = np.concatenate(finger_jnts_local_rot_aa_list, axis=0)
+    
+    num_frames = human_root_pos_all.shape[0]
+    
+    num_objects = len(params_save_paths) // 2
+    obj_pos_all = np.zeros((num_objects, num_frames, 3))
+    obj_rot_mat_all = np.zeros((num_objects, num_frames, 3, 3))
+    
+    contact_info = [[False] * num_frames for _ in range(num_objects)] # N X T
+    
+    cur_idx = 0
+    for i in range(len(params_save_paths)):
+        with open(params_save_paths[i], "rb") as f:
+            data = pickle.load(f)
+        if 'obj_pos' in data and 'obj_rot_mat' in data:
+            obj_pos = data["obj_pos"].detach().cpu().numpy() # T X 3
+            obj_rot_mat = data["obj_rot_mat"].detach().cpu().numpy() # T X 3 X 3
+            
+            # Set object pose at [pre, middle, post].
+            obj_pos_all[i//2, cur_idx:cur_idx+obj_pos.shape[0]] = obj_pos
+            obj_pos_all[i//2, :cur_idx] = obj_pos[0]
+            obj_pos_all[i//2, cur_idx+obj_pos.shape[0]:] = obj_pos[-1]
+            
+            obj_rot_mat_all[i//2, cur_idx:cur_idx+obj_pos.shape[0]] = obj_rot_mat
+            obj_rot_mat_all[i//2, :cur_idx] = obj_rot_mat[0]
+            obj_rot_mat_all[i//2, cur_idx+obj_pos.shape[0]:] = obj_rot_mat[-1]
+            
+            object_name = data['object_name']
+            object_endtime_pairs.append((object_name, cur_idx+obj_pos.shape[0]))
+            
+            global_contact_start_frame = cur_idx + contact_start_frames[i//2]
+            global_contact_end_frame = cur_idx + contact_end_frames[i//2]
+            contact_info[i//2][global_contact_start_frame:global_contact_end_frame] = [True] * (global_contact_end_frame - global_contact_start_frame)
+            
+        cur_idx += frame_num_list[i]
+        
+    name = params_save_paths[0].split('/')[-4]
+    dir = os.path.join(
+        os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        ),
+        'results', 'motion_params',
+        name
+    )
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    path = os.path.join(dir, "seq_{}.json".format(p_idx))
+    
+    data = {
+        "human_root_pos": human_root_pos_all, # T X 3
+        "human_jnts_pos": human_jnts_pos_all, # T X 24 X 3
+        "human_jnts_local_rot_aa": human_jnts_local_rot_aa_all, # T X 22 X 3
+        "finger_jnts_local_rot_aa": finger_jnts_local_rot_aa_all, # T X 30 X 3
+        "obj_pos": obj_pos_all, # N X T X 3
+        "obj_rot_mat": obj_rot_mat_all, # N X T X 3 X 3
+        "object_endtime_pairs": object_endtime_pairs, # N X 2
+        "contact_info": contact_info, # N X T
+    }
+    with open(path.replace('json', 'pkl'), 'wb') as f:
+        pickle.dump(data, f)
+    phys_data = convert_smplx_to_phys(data, )
+    with open(path, 'w') as f:
+        json.dump(phys_data, f)
+    print("Saved motion params to {}".format(path))
+

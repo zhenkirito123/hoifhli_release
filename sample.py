@@ -2390,6 +2390,9 @@ def run_sample(
     if not os.path.exists("./results/initial_obj_vis"):
         os.makedirs("./results/initial_obj_vis")
 
+    if not os.path.exists("./results/motion_params"):
+        os.makedirs("./results/motion_params")
+
     cond_sample_res_w_long_planned_path_for_multi_objects(
         opt,
         device,
