@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<robot name="largebox_2">
+  <link name="largebox_2">
+    <visual>
+      <origin pos="0 0.005 -0.0022" rpy="0 0 -0.23561945" />
+      <geometry>
+        <box size="0.31 0.31 0.3456" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin pos="0 0.005 -0.0022" rpy="0 0 -0.23561945" />
+      <geometry>
+        <box size="0.31 0.31 0.3456" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.3" />
+    </inertial>
+  </link>
+</robot>

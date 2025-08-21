@@ -1,0 +1,10 @@
+<mujoco model="largebox">
+  <compiler angle="degree" />
+  <worldbody>
+    <body name="largebox" pos="0 0 0">
+      <freejoint />
+      <geom type="box" pos="0 0.005 -0.0022" size="0.155 0.155 0.1728" axisangle="0 0 1 -13.5" />
+      <inertial mass="0.3" />
+    </body>
+  </worldbody>
+</mujoco>
