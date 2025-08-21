@@ -84,6 +84,10 @@ bash scripts/train/train_coarsenet.sh
 bash scripts/train/train_refinenet.sh
 ```
 
+### Physics Tracking
+Please refer to [here](./physics_tracking/README.md).
+
+
 ### Citation
 ```
 @article{wu2024human,
