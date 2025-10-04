@@ -90,11 +90,12 @@ Please refer to [here](./physics_tracking/README.md).
 
 ### Citation
 ```
-@article{wu2024human,
-  title={Human-object interaction from human-level instructions},
-  author={Wu, Zhen and Li, Jiaman and Xu, Pei and Liu, C Karen},
-  journal={arXiv preprint arXiv:2406.17840},
-  year={2024}
+@inproceedings{hoifhli,
+  title={Human-Object Interaction from Human-Level Instructions},
+  author={Wu, Zhen and Li, Jiaman and Xu, Pei and Liu, C. Karen},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  month={October},
+  year={2025}
 }
 ```
 
